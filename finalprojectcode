@@ -1,0 +1,394 @@
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <fstream>
+#include <cmath>
+using namespace std;
+
+// ==========================================
+// Base Class
+// ==========================================
+class chaitanya_10191_OBEBase {
+public:
+    virtual void chaitanya_10191_createRecord() = 0;
+    virtual void chaitanya_10191_updateRecord() = 0;
+    virtual void chaitanya_10191_viewRecords() = 0;
+    virtual void chaitanya_10191_deleteRecord() = 0;
+    virtual void chaitanya_10191_storeToFile() = 0;
+    virtual void chaitanya_10191_display_details_in_table() = 0;
+    virtual void chaitanya_10191_sorting() = 0;
+    virtual void chaitanya_10191_searching() = 0;
+    virtual ~chaitanya_10191_OBEBase() = default;
+};
+
+// ==========================================
+// Derived Class
+// ==========================================
+class chaitanya_10191_CourseArticulationMatrix : public chaitanya_10191_OBEBase {
+private:
+    static const int MAX_RECORDS = 20;
+    static chaitanya_10191_CourseArticulationMatrix records[MAX_RECORDS];
+    static int recordCount;
+    static int nextId;
+
+    int id;
+    string courseName;
+    int matrix[5][15];
+
+    string columns[15] = {
+        "Engg Know", "Prob Ana", "Des & Dev", "Ana & Res", "Mod Tool",
+        "Society", "Env & Sust", "Ethics", "Team Work", "Comm Skills",
+        "Proj Mgmt", "Self Learn", "PSO1", "PSO2", "PSO3"
+    };
+
+public:
+    chaitanya_10191_CourseArticulationMatrix() {
+        id = 0;
+        courseName = "";
+        for (int i = 0; i < 5; i++)
+            for (int j = 0; j < 15; j++)
+                matrix[i][j] = 0;
+    }
+
+    int operator+(const chaitanya_10191_CourseArticulationMatrix& other) const {
+        return recordCount + 1;
+    }
+
+    void chaitanya_10191_createRecord() override {
+        if (recordCount >= MAX_RECORDS) {
+            cout << "Database full!" << endl;
+            return;
+        }
+
+        chaitanya_10191_CourseArticulationMatrix newRecord;
+        newRecord.id = nextId++;
+        cout << "Enter Course Name: ";
+        cin.ignore();
+        getline(cin, newRecord.courseName);
+
+        cout << "\nEnter the articulation matrix values (1–3):\n";
+        for (int i = 0; i < 4; i++) {
+            cout << "\n--- Outcome " << (i + 1) << " ---\n";
+            for (int j = 0; j < 15; j++) {
+                cout << newRecord.columns[j] << ": ";
+                cin >> newRecord.matrix[i][j];
+            }
+        }
+
+        for (int j = 0; j < 15; j++) {
+            int sum = 0;
+            for (int i = 0; i < 4; i++)
+                sum += newRecord.matrix[i][j];
+            newRecord.matrix[4][j] = sum / 4;
+        }
+
+        records[recordCount++] = newRecord;
+        cout << "\n✅ Record created successfully! ID: " << newRecord.id << "\n";
+    }
+
+    void chaitanya_10191_updateRecord() override {
+        int uid;
+        cout << "Enter record ID to update: ";
+        cin >> uid;
+        for (int i = 0; i < recordCount; i++) {
+            if (records[i].id == uid) {
+                cout << "Updating record for " << records[i].courseName << "\n";
+                cout << "Enter new course name: ";
+                cin.ignore();
+                getline(cin, records[i].courseName);
+                for (int r = 0; r < 4; r++) {
+                    cout << "\nOutcome " << (r + 1) << "\n";
+                    for (int c = 0; c < 15; c++) {
+                        cout << records[i].columns[c] << ": ";
+                        cin >> records[i].matrix[r][c];
+                    }
+                }
+                cout << "Record updated successfully!\n";
+                return;
+            }
+        }
+        cout << "Record not found!\n";
+    }
+
+    void chaitanya_10191_viewRecords() override {
+        if (recordCount == 0) {
+            cout << "No records found!\n";
+            return;
+        }
+        for (int i = 0; i < recordCount; i++) {
+            cout << "\n[" << records[i].id << "] Course: " << records[i].courseName << "\n";
+            records[i].chaitanya_10191_display_details_in_table();
+        }
+    }
+
+    void chaitanya_10191_deleteRecord() override {
+        int did;
+        cout << "Enter record ID to delete: ";
+        cin >> did;
+        for (int i = 0; i < recordCount; i++) {
+            if (records[i].id == did) {
+                for (int j = i; j < recordCount - 1; j++)
+                    records[j] = records[j + 1];
+                recordCount--;
+                cout << "Record deleted successfully!\n";
+                return;
+            }
+        }
+        cout << "Record not found!\n";
+    }
+
+    void chaitanya_10191_storeToFile() override {
+        ofstream file("course_matrix.csv");
+        if (!file.is_open()) {
+            cout << "Error opening file!\n";
+            return;
+        }
+
+        for (int i = 0; i < recordCount; i++) {
+            file << records[i].id << "," << records[i].courseName;
+            for (int r = 0; r < 5; r++) {
+                for (int c = 0; c < 15; c++) {
+                    file << "," << records[i].matrix[r][c];
+                }
+            }
+            file << "\n";
+        }
+        file.close();
+        cout << "Data stored to course_matrix.csv successfully!\n";
+    }
+
+    void chaitanya_10191_display_details_in_table() override {
+        const int COL_WIDTH = 13;
+        const int NUM_COLS = 15;
+        const int LABEL_WIDTH = 12;
+        const int TOTAL_WIDTH = LABEL_WIDTH + (NUM_COLS * (COL_WIDTH + 1)) + 2;
+
+        auto printLine = [&](char ch) {
+            for (int i = 0; i < TOTAL_WIDTH; ++i) cout << ch;
+            cout << "\n";
+        };
+
+        printLine('=');
+        cout << setw((TOTAL_WIDTH + 55) / 2) << right
+             << "COURSE ARTICULATION MATRIX TO PROGRAM LEARNING OUTCOMES" << "\n";
+        printLine('=');
+
+        cout << "|" << setw(LABEL_WIDTH) << left << "Outcome";
+        for (int j = 0; j < NUM_COLS; j++)
+            cout << "|" << setw(COL_WIDTH) << left << columns[j];
+        cout << "|\n";
+        printLine('-');
+
+        for (int i = 0; i < 5; i++) {
+            cout << "|" << setw(LABEL_WIDTH) << left
+                 << (i == 4 ? "Average" : ("Outcome " + to_string(i + 1)));
+            for (int j = 0; j < NUM_COLS; j++)
+                cout << "|" << setw(COL_WIDTH) << right << matrix[i][j];
+            cout << "|\n";
+        }
+        printLine('=');
+    }
+
+    // ==========================================
+    // Sorting Algorithms (3 types)
+    // ==========================================
+    void chaitanya_10191_sorting() override {
+        if (recordCount < 2) {
+            cout << "Not enough records to sort!\n";
+            return;
+        }
+
+        int choice;
+        cout << "\nChoose Sorting Algorithm:\n";
+        cout << "1. Bubble Sort\n2. Selection Sort\n3. Insertion Sort\nEnter choice: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1: { // Bubble Sort
+            for (int i = 0; i < recordCount - 1; i++) {
+                for (int j = 0; j < recordCount - i - 1; j++) {
+                    if (records[j].courseName > records[j + 1].courseName) {
+                        chaitanya_10191_CourseArticulationMatrix temp = records[j];
+                        records[j] = records[j + 1];
+                        records[j + 1] = temp;
+                    }
+                }
+            }
+            cout << "✅ Sorted using Bubble Sort (O(n^2))\n";
+            break;
+        }
+        case 2: { // Selection Sort
+            for (int i = 0; i < recordCount - 1; i++) {
+                int minIndex = i;
+                for (int j = i + 1; j < recordCount; j++) {
+                    if (records[j].courseName < records[minIndex].courseName)
+                        minIndex = j;
+                }
+                if (minIndex != i)
+                    swap(records[i], records[minIndex]);
+            }
+            cout << "✅ Sorted using Selection Sort (O(n^2))\n";
+            break;
+        }
+        case 3: { // Insertion Sort
+            for (int i = 1; i < recordCount; i++) {
+                chaitanya_10191_CourseArticulationMatrix key = records[i];
+                int j = i - 1;
+                while (j >= 0 && records[j].courseName > key.courseName) {
+                    records[j + 1] = records[j];
+                    j--;
+                }
+                records[j + 1] = key;
+            }
+            cout << "✅ Sorted using Insertion Sort (O(n^2))\n";
+            break;
+        }
+        default:
+            cout << "Invalid choice!\n";
+        }
+    }
+
+    // ==========================================
+    // Searching Algorithms (3 types)
+    // ==========================================
+    void chaitanya_10191_searching() override {
+        if (recordCount == 0) {
+            cout << "No records available!\n";
+            return;
+        }
+
+        int choice;
+        cout << "\nChoose Searching Algorithm:\n";
+        cout << "1. Linear Search\n2. Binary Search\n3. Jump Search\nEnter choice: ";
+        cin >> choice;
+
+        string key;
+        cout << "Enter course name to search: ";
+        cin.ignore();
+        getline(cin, key);
+
+        bool found = false;
+
+        switch (choice) {
+        case 1: // Linear Search
+            for (int i = 0; i < recordCount; i++) {
+                if (records[i].courseName.find(key) != string::npos) {
+                    cout << "\n✅ Record Found (Linear Search):\n";
+                    records[i].chaitanya_10191_display_details_in_table();
+                    found = true;
+                }
+            }
+            cout << "⏱ Time Complexity: O(n)\n";
+            break;
+
+        case 2: { // Binary Search
+            // Must be sorted before
+            chaitanya_10191_sorting();
+            int low = 0, high = recordCount - 1;
+            while (low <= high) {
+                int mid = (low + high) / 2;
+                if (records[mid].courseName == key) {
+                    cout << "\n✅ Record Found (Binary Search):\n";
+                    records[mid].chaitanya_10191_display_details_in_table();
+                    found = true;
+                    break;
+                }
+                else if (records[mid].courseName < key)
+                    low = mid + 1;
+                else
+                    high = mid - 1;
+            }
+            cout << "⏱ Time Complexity: O(log n)\n";
+            break;
+        }
+
+        case 3: { // Jump Search
+            chaitanya_10191_sorting();
+            int step = sqrt(recordCount);
+            int prev = 0;
+            while (records[min(step, recordCount) - 1].courseName < key) {
+                prev = step;
+                step += sqrt(recordCount);
+                if (prev >= recordCount) break;
+            }
+            for (int i = prev; i < min(step, recordCount); i++) {
+                if (records[i].courseName == key) {
+                    cout << "\n✅ Record Found (Jump Search):\n";
+                    records[i].chaitanya_10191_display_details_in_table();
+                    found = true;
+                    break;
+                }
+            }
+            cout << "⏱ Time Complexity: O(√n)\n";
+            break;
+        }
+
+        default:
+            cout << "Invalid choice!\n";
+        }
+
+        if (!found)
+            cout << "No matching record found!\n";
+    }
+
+    static int chaitanya_10191_totalRecords() { return recordCount; }
+};
+
+// Static initialization
+chaitanya_10191_CourseArticulationMatrix chaitanya_10191_CourseArticulationMatrix::records[MAX_RECORDS];
+int chaitanya_10191_CourseArticulationMatrix::recordCount = 0;
+int chaitanya_10191_CourseArticulationMatrix::nextId = 1;
+
+// ==========================================
+// Menu
+// ==========================================
+void chaitanya_10191_displayMenu() {
+    cout << "\n=== COURSE ARTICULATION MATRIX MENU ===\n";
+    cout << "1. Create Record\n";
+    cout << "2. Update Record\n";
+    cout << "3. View all records (in-memory)\n";
+    cout << "4. Delete a record\n";
+    cout << "5. Store records to file (CSV)\n";
+    cout << "6. Display table\n";
+    cout << "7. Sorting (choose algorithm)\n";
+    cout << "8. Searching (choose algorithm)\n";
+    cout << "9. Show total records\n";
+    cout << "10. Exit\n";
+    cout << "Enter your choice: ";
+}
+
+// ==========================================
+// Main
+// ==========================================
+int main() {
+    chaitanya_10191_CourseArticulationMatrix manager;
+    int choice;
+
+    do {
+        chaitanya_10191_displayMenu();
+        cin >> choice;
+
+        switch (choice) {
+        case 1: manager.chaitanya_10191_createRecord(); break;
+        case 2: manager.chaitanya_10191_updateRecord(); break;
+        case 3: manager.chaitanya_10191_viewRecords(); break;
+        case 4: manager.chaitanya_10191_deleteRecord(); break;
+        case 5: manager.chaitanya_10191_storeToFile(); break;
+        case 6: manager.chaitanya_10191_display_details_in_table(); break;
+        case 7: manager.chaitanya_10191_sorting(); break;
+        case 8: manager.chaitanya_10191_searching(); break;
+        case 9:
+            cout << "Total Records: "
+                 << chaitanya_10191_CourseArticulationMatrix::chaitanya_10191_totalRecords() << "\n";
+            break;
+        case 10:
+            cout << "Exiting program... Thank you!\n";
+            break;
+        default:
+            cout << "Invalid choice!\n";
+        }
+
+    } while (choice != 10);
+
+    return 0;
+}
